@@ -5,6 +5,7 @@
 //   users/{uid}/store/config   → ajustes, fechas clave, disponibilidad, semana tipo, propuesta del planificador
 //   users/{uid}/store/temas    → estado, notas, repasos y recursos de los 41 temas
 //   users/{uid}/store/chat     → historial del tutor y dudas pendientes
+//   users/{uid}/store/psico    → resultados de los cuestionarios psicotécnicos
 //   users/{uid}/events/{id}    → una tarea por documento
 //   users/{uid}                → documento ÚNICO de la versión anterior (solo se lee para migrar)
 // Archivos adjuntos: troceados en base64 en users/{uid}/files/{idArchivo}_{n} (solo Firestore, plan gratuito)
@@ -34,6 +35,7 @@ const PARTS = {
   config: ['ai', 'theme', 'avail', 'startHour', 'exam', 'preview', 'tpl', 'timerCfg'],
   temas: ['temas'],
   chat: ['chatLog', 'doubts'],
+  psico: ['psico'],
 };
 const PART_NAMES = Object.keys(PARTS);
 

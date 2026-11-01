@@ -489,3 +489,78 @@ a.btn{text-decoration:none}
   .tm-info{max-width:120px}
   .tm-time{font-size:18px}
 }
+
+/* ===== v2.1: psicotécnicos ===== */
+.ev-psico { background: rgba(139,92,246,.14); color: #7C3AED }
+:root[data-theme="dark"] .ev-psico { color: #C4B5FD }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ev-psico { color: #C4B5FD } }
+.ps-suggest { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 14px 0; flex-wrap: wrap }
+.ps-sg-t { font-size: 16px; font-weight: 600 }
+.ps-cfg { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--fg-2); margin-bottom: 14px }
+.ps-cfg select { width: auto }
+.ps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px }
+.ps-block { padding: 14px }
+.ps-bh { display: flex; align-items: center; gap: 10px; margin-bottom: 8px }
+.ps-bi { font-size: 22px }
+.ps-bn { font-weight: 600; font-size: 14px }
+.ps-bavg { margin-left: auto; font-weight: 700; font-size: 16px; font-family: var(--mono) }
+.ps-qs-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px }
+.ps-q { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; color: var(--fg) }
+.ps-q:hover { border-color: var(--accent); background: var(--accent-light) }
+.ps-ql { font-weight: 700; font-size: 15px }
+.ps-qs { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--fg-3) }
+.ps-qm { font-size: 10px; color: var(--fg-3) }
+.ps-modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 720px; max-height: calc(100dvh - 24px); overflow-y: auto; padding: 22px; box-shadow: 0 20px 50px rgba(0,0,0,.28) }
+.ps-head { display: flex; justify-content: space-between; align-items: center; gap: 10px }
+.ps-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 }
+.ps-facts div { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 4px; text-align: center }
+.ps-facts b { display: block; font-size: 16px; font-family: var(--mono) }
+.ps-facts span { font-size: 10px; color: var(--fg-3) }
+.ps-rules { font-size: 13px; color: var(--fg-2); padding-left: 18px; margin: 0 0 12px; line-height: 1.55 }
+kbd { font-family: var(--mono); font-size: 11px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 5px }
+.ps-ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin: 10px 0 }
+.ps-ficha div { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 15px; font-weight: 600 }
+.ps-ficha span { display: block; font-size: 10px; font-weight: 500; color: var(--fg-3); text-transform: uppercase; letter-spacing: .05em }
+.ps-top { display: flex; justify-content: space-between; align-items: center; gap: 10px }
+.ps-tt { font-weight: 600; font-size: 13px }
+.ps-time { font-family: var(--mono); font-size: 20px; font-weight: 700 }
+.ps-time.warn { color: var(--warn) }
+.ps-time.over { color: var(--danger) }
+.ps-prog { height: 4px; background: var(--border); border-radius: 2px; margin: 8px 0 }
+.ps-prog div { height: 100%; background: var(--accent); border-radius: 2px; transition: width .2s }
+.ps-qn { font-size: 12px; font-weight: 600; margin-bottom: 8px }
+.ps-q-text { font-size: 16px; line-height: 1.5; margin: 6px 0 14px; font-weight: 500; word-break: break-word }
+.ps-text { background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 12px; font-size: 13px; line-height: 1.55; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 6px 0 }
+.ps-memo-hint { font-size: 11px; color: var(--fg-3); margin-bottom: 2px }
+.ps-opts { display: grid; gap: 8px }
+.ps-opt { display: flex; align-items: center; gap: 12px; text-align: left; padding: 11px 14px; background: var(--surface-2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; font: inherit; font-size: 15px; color: var(--fg) }
+.ps-opt:hover { border-color: var(--accent) }
+.ps-opt.on { border-color: var(--accent); background: var(--accent-light) }
+.ps-ol { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--border); font-size: 12px; font-weight: 700 }
+.ps-opt.on .ps-ol { background: var(--accent); color: #fff }
+.ps-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px }
+.ps-map { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 14px }
+.ps-mp { width: 30px; height: 28px; border-radius: 5px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--fg-2); font: inherit; font-size: 11px; cursor: pointer }
+.ps-mp.a { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600 }
+.ps-mp.c { outline: 2px solid var(--accent); outline-offset: 1px }
+.ps-score { text-align: center; font-size: 46px; font-weight: 700; font-family: var(--mono); margin: 12px 0 0 }
+.ps-score span { display: block; font-size: 16px }
+.ps-rows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px }
+.ps-row { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2) }
+.ps-row summary { display: flex; gap: 8px; align-items: center; padding: 7px 10px; cursor: pointer; font-size: 12px; list-style: none }
+.ps-row summary::-webkit-details-marker { display: none }
+.ps-rn { font-family: var(--mono); color: var(--fg-3); width: 20px }
+.ps-ri { font-weight: 700; width: 16px; text-align: center }
+.ps-row.ok .ps-ri { color: var(--ok) }
+.ps-row.ko .ps-ri { color: var(--danger) }
+.ps-row.blank .ps-ri { color: var(--fg-3) }
+.ps-rq { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ps-rd { padding: 4px 12px 10px }
+.ps-ro { display: flex; gap: 8px; align-items: center; padding: 4px 8px; font-size: 13px; border-radius: 5px }
+.ps-ro.right { background: var(--ok-light) }
+.ps-ro.wrong { background: var(--danger-light) }
+@media (max-width: 560px) {
+  .ps-modal { padding: 14px }
+  .ps-facts { grid-template-columns: repeat(2, 1fr) }
+  .ps-q-text { font-size: 15px }
+}

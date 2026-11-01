@@ -39,6 +39,7 @@
     <button class="nav-btn" data-panel="plan" onclick="nav('plan')"><span class="ni">✨</span>Planificador</button>
     <button class="nav-btn" data-panel="cal" onclick="nav('cal')"><span class="ni">📅</span>Calendario</button>
     <button class="nav-btn" data-panel="stats" onclick="nav('stats')"><span class="ni">📈</span>Estadísticas</button>
+    <button class="nav-btn" data-panel="psico" onclick="nav('psico')"><span class="ni">🧩</span>Psicotécnicos</button>
     <button class="nav-btn" data-panel="tutor" onclick="nav('tutor')"><span class="ni">🤖</span>Tutor IA</button>
   </nav>
   <div class="tn-actions">
@@ -174,6 +175,11 @@
       <div id="stats-cont"></div>
     </div>
 
+    <!-- PSICOTÉCNICOS -->
+    <div id="p-psico" class="panel">
+      <div id="psico-cont"></div>
+    </div>
+
     <!-- TUTOR IA -->
     <div id="p-tutor" class="panel">
       <div id="api-notice" class="alert alert-info" style="margin-bottom:12px;display:none"></div>
@@ -285,6 +291,7 @@
           <option value="study">📖 Estudio de tema</option>
           <option value="repaso">🔄 Repaso</option>
           <option value="test">📝 Práctica / simulacro</option>
+          <option value="psico">🧩 Psicotécnicos</option>
           <option value="other">🎯 Otro</option>
         </select>
       </div>
@@ -318,6 +325,7 @@
     <div class="st-seg" id="tk-status"></div>
     <div class="plan-sub" id="tk-note"></div>
     <div class="tk-acts">
+      <button class="btn btn-primary btn-sm" id="tk-psico" style="display:none" onclick="psicoFromTask(curTask)">🧩 Hacer cuestionario</button>
       <button class="btn btn-primary btn-sm" onclick="tmStartCurrent()">▶ Iniciar temporizador</button>
       <button class="btn btn-ghost btn-sm" onclick="editTask()">✏️ Editar</button>
       <button class="btn btn-ghost btn-sm" onclick="postponeTask()" title="Pasarla a mañana (o un día después de su fecha)">⏭ Posponer</button>
@@ -328,6 +336,11 @@
       <button class="btn btn-ghost" onclick="closeM('modal-task')">Cerrar</button>
     </div>
   </div>
+</div>
+
+<!-- MODAL: PSICOTÉCNICOS (cuestionario en curso) -->
+<div id="modal-psico" class="modal-overlay" style="display:none">
+  <div class="ps-modal" id="ps-box"></div>
 </div>
 
 <!-- MODAL: FECHAS CLAVE -->
@@ -411,6 +424,8 @@
 <script src="js/stats.js?v=2"></script>
 <script src="js/timer.js?v=2"></script>
 <script src="js/tutor.js?v=2"></script>
+<script src="js/psico-data.js?v=2"></script>
+<script src="js/psico.js?v=2"></script>
 <script type="module" src="js/sync.js?v=2"></script>
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 </body>

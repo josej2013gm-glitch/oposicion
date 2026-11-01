@@ -12,6 +12,7 @@ function defaultState(){
     avail:{1:3,2:3,3:3,4:3,5:3,6:4,0:0}, startHour:'09:00',
     exam:{date:'', borm:'', legisOk:false, hitos:[]},
     tpl:[], timerCfg:{pomo:false, work:25, brk:5}, preview:null,
+    psico:{runs:[], perWeek:2},
   };
 }
 let S = defaultState();
@@ -30,7 +31,7 @@ function toast(msg,ms){
 // ============================================================
 // NAVEGACIÓN
 // ============================================================
-const PANELS = ['dashboard','temas','plan','cal','stats','tutor'];
+const PANELS = ['dashboard','temas','plan','cal','stats','psico','tutor'];
 
 function nav(name){
   PANELS.forEach(p=>$('p-'+p).classList.toggle('active',p===name));
@@ -42,6 +43,7 @@ function nav(name){
   else if(name==='cal') renderCal();
   else if(name==='dashboard') renderDash();
   else if(name==='stats') renderStats();
+  else if(name==='psico') renderPsico();
   else if(name==='tutor'){renderTutorBar();scrollChat();updateApiNotice();}
 }
 
@@ -168,6 +170,10 @@ function normalizeState(){
   S.exam={...D.exam,...(S.exam||{})};
   if(!Array.isArray(S.exam.hitos))S.exam.hitos=[];
   S.timerCfg={...D.timerCfg,...(S.timerCfg||{})};
+  S.psico={...D.psico,...(S.psico&&typeof S.psico==='object'?S.psico:{})};
+  if(!Array.isArray(S.psico.runs))S.psico.runs=[];
+  S.psico.runs=S.psico.runs.filter(r=>r&&r.id&&r.q&&typeof r.a==='string');
+  S.psico.perWeek=Math.max(0,Math.min(7,parseInt(S.psico.perWeek,10)||0));
   // restos de versiones anteriores
   delete S.gemKey;delete S.req;delete S.boeDate;
   S.events=S.events.filter(e=>e&&e.id&&e.date).map(e=>Object.assign({src:'manual',status:null,tema:null,desc:'',adv:false},e));
