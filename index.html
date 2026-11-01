@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F2044">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Oposición PL">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Oposición PL Cieza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+
+<!-- ACCESO -->
+<div id="gate" class="gate"><div class="gate-card">
+  <div style="font-size:42px;line-height:1">🚔</div>
+  <h1>Policía Local Cieza</h1>
+  <div class="gate-sub">Gestor de la oposición · 5 plazas · C1</div>
+  <div id="gate-body"><div class="spinner"></div><div class="gate-msg">Cargando…</div></div>
+</div></div>
+
+<!-- TOP NAV -->
+<header id="topnav">
+  <div class="tn-brand">
+    <span style="font-size:22px">🚔</span>
+    <div><div class="tn-title">Policía Local Cieza</div><div class="tn-sub">5 plazas · Grupo C1 · OPE 2025/2026</div></div>
+  </div>
+  <nav class="tn-menu">
+    <button class="nav-btn active" data-panel="dashboard" onclick="nav('dashboard')"><span class="ni">📊</span>Dashboard</button>
+    <button class="nav-btn" data-panel="temas" onclick="nav('temas')"><span class="ni">📚</span>Temas</button>
+    <button class="nav-btn" data-panel="plan" onclick="nav('plan')"><span class="ni">✨</span>Planificador</button>
+    <button class="nav-btn" data-panel="cal" onclick="nav('cal')"><span class="ni">📅</span>Calendario</button>
+    <button class="nav-btn" data-panel="stats" onclick="nav('stats')"><span class="ni">📈</span>Estadísticas</button>
+    <button class="nav-btn" data-panel="tutor" onclick="nav('tutor')"><span class="ni">🤖</span>Tutor IA</button>
+  </nav>
+  <div class="tn-actions">
+    <span id="sync-ind" class="sync-ind" title="Estado de sincronización">☁️</span>
+    <button class="tn-icon" onclick="toggleTheme()" title="Cambiar tema"><span id="th-icon">🌙</span></button>
+    <button class="tn-icon" onclick="openSettings()" title="Configuración">⚙️</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddEvent()">+<span class="btn-label"> Sesión</span></button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="content">
+
+    <!-- DASHBOARD -->
+    <div id="p-dashboard" class="panel active">
+      <div id="hoy-card"></div>
+      <div id="legis-alert"></div>
+      <div id="countdown"></div>
+      <div class="stats-row" id="stat-tiles"></div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Repasos pendientes (próx. 7 días)</div>
+          <div id="repaso-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Progreso por grupo</div>
+          <div id="group-progress"></div>
+        </div>
+      </div>
+      <div class="section-label">Próximas sesiones</div>
+      <div id="upcoming-evs"></div>
+    </div>
+
+    <!-- TEMAS -->
+    <div id="p-temas" class="panel">
+      <div class="filters">
+        <select id="f-estado" onchange="renderTemas()">
+          <option value="">Todos los estados</option>
+          <option value="0">Sin empezar</option>
+          <option value="1">1ª Vuelta</option>
+          <option value="2">2ª Vuelta</option>
+          <option value="3">Consolidado</option>
+          <option value="due">⚠️ Repaso vencido</option>
+          <option value="low">★ Confianza baja (1-2)</option>
+          <option value="weak">⚠ Con puntos débiles</option>
+        </select>
+        <select id="f-grupo" onchange="renderTemas()">
+          <option value="">Todos los grupos</option>
+          <option value="I">Grupo I</option>
+          <option value="II">Grupo II</option>
+          <option value="III">Grupo III</option>
+        </select>
+        <input type="text" id="f-search" placeholder="Buscar tema…" oninput="renderTemas()" style="flex:1;min-width:140px">
+        <button class="btn btn-ghost btn-sm" onclick="expandAll()">Expandir todo</button>
+      </div>
+      <div id="temas-cont"></div>
+    </div>
+
+    <!-- PLANIFICADOR -->
+    <div id="p-plan" class="panel">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Disponibilidad semanal (horas de estudio)</div>
+          <div class="avail-grid" id="avail-grid"></div>
+          <div class="avail-foot">
+            <label>Empiezo a estudiar a las <input type="time" id="start-hour" onchange="saveStart()"></label>
+            <span id="avail-total"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Seguimiento reciente</div>
+          <div id="recent"></div>
+        </div>
+      </div>
+      <div class="card plan-card">
+        <div class="plan-head">
+          <div>
+            <div class="plan-title">✨ Planificar con IA</div>
+            <div class="plan-sub" id="plan-target"></div>
+          </div>
+          <div class="plan-ctl">
+            <select id="plan-week" onchange="setPlanOff(this.value)" aria-label="Semana a planificar">
+              <option value="0">Esta semana (desde hoy)</option>
+              <option value="1">Próxima semana</option>
+              <option value="2">Dentro de 2 semanas</option>
+              <option value="3">Dentro de 3 semanas</option>
+            </select>
+            <button class="btn btn-primary" id="plan-btn" onclick="planWeek()">✨ Planificar</button>
+          </div>
+        </div>
+        <textarea id="plan-extra" class="w-full" rows="2" placeholder="Indicaciones opcionales para la IA (p. ej. «el jueves solo tengo 1 hora», «prioriza el Grupo III»)…"></textarea>
+        <div class="plan-sub" id="plan-ai-info" style="margin-top:8px"></div>
+      </div>
+      <div id="plan-preview"></div>
+    </div>
+
+    <!-- CALENDARIO -->
+    <div id="p-cal" class="panel">
+      <div class="planner-top">
+        <div class="seg"><button id="vw-week" onclick="setCalView('week')">Semana</button><button id="vw-month" onclick="setCalView('month')">Mes</button></div>
+        <div class="week-nav">
+          <button class="btn btn-ghost btn-icon" onclick="chgPeriod(-1)">◀</button>
+          <div class="week-label" id="week-lbl"></div>
+          <button class="btn btn-ghost btn-icon" onclick="chgPeriod(1)">▶</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="goToday()">Hoy</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddEvent()">+ Agregar tarea</button>
+      </div>
+      <div class="cal-tools" id="cal-tools">
+        <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()">⧉ Copiar semana anterior</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveTpl()">💾 Guardar como semana tipo</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyTpl()">📋 Aplicar semana tipo</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportICS('week')">⬇️ .ics semana</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportICS('future')">⬇️ .ics pendientes</button>
+      </div>
+      <div id="cal-pending"></div>
+      <div style="overflow-x:auto">
+        <div class="cal-grid" id="cal-grid" style="min-width:500px"></div>
+      </div>
+      <div class="cal-legend">
+        <span><i style="background:var(--accent)"></i>Estudio</span><span><i style="background:var(--ok)"></i>Repaso</span><span><i style="background:var(--info)"></i>Test</span><span><i style="background:var(--warn)"></i>Otro</span>
+        <span>✓ completada · ½ parcial · ✕ no hecha · arrastra una tarea para cambiarla de día</span>
+      </div>
+      <div id="week-list-wrap">
+        <div class="section-label">Tareas de la semana</div>
+        <div id="week-evs"></div>
+      </div>
+    </div>
+
+    <!-- ESTADÍSTICAS -->
+    <div id="p-stats" class="panel">
+      <div id="stats-cont"></div>
+    </div>
+
+    <!-- TUTOR IA -->
+    <div id="p-tutor" class="panel">
+      <div id="api-notice" class="alert alert-info" style="margin-bottom:12px;display:none"></div>
+      <div id="tutor-ctx" class="tutor-ctx" style="display:none"></div>
+      <div class="quick-prompts" id="qp-area"></div>
+      <div class="tutor-tools">
+        <label class="chk"><input type="checkbox" id="srch-chk" onchange="toggleSearch(this.checked)"> 🌐 Verificar legislación vigente (búsqueda web)</label>
+        <button class="btn btn-ghost btn-sm" onclick="openCorr()">✍️ Corregir desarrollo</button>
+        <button class="btn btn-ghost btn-sm" onclick="openDoubts()">❓ Dudas (<span id="dbt-n">0</span>)</button>
+        <button class="btn btn-ghost btn-sm" onclick="newChat()" title="Nueva conversación">🗑 Nuevo chat</button>
+      </div>
+      <div id="tutor-inner">
+        <div class="chat-win" id="chat-win"></div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-inp" placeholder="Pregunta sobre el temario…" rows="1"
+            onkeydown="chatKey(event)" oninput="autoH(this)"></textarea>
+          <button class="btn btn-primary" id="send-btn" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div>
+
+<!-- TEMPORIZADOR FLOTANTE -->
+<div id="tm-bar" class="tm-bar" hidden>
+  <div class="tm-info"><div class="tm-title" id="tm-title"></div><div class="tm-sub" id="tm-sub"></div></div>
+  <div class="tm-time" id="tm-time">00:00</div>
+  <div class="tm-btns">
+    <button id="tm-pp" onclick="tmToggle()" title="Pausar / reanudar">⏸</button>
+    <button onclick="tmFinish()" title="Terminar y guardar">⏹</button>
+    <button id="tm-pomo" onclick="tmPomoToggle()" title="Modo Pomodoro">🍅</button>
+    <button onclick="tmDiscard()" title="Descartar">✕</button>
+  </div>
+</div>
+
+<!-- MODAL: AJUSTES -->
+<div id="modal-cfg" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-cfg')">
+  <div class="modal">
+    <div class="modal-title">⚙️ Configuración</div>
+    <div class="modal-sub">El Tutor y el Planificador usan tu API Key de Google AI Studio. Todo se guarda en tu cuenta y se sincroniza entre dispositivos.</div>
+    <div class="modal-field">
+      <label class="modal-label">API Key de Google AI Studio <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--accent);font-weight:500">(obtenerla)</a></label>
+      <div style="display:flex;gap:6px">
+        <input type="password" id="key-inp" class="w-full" placeholder="AIzaSy…" autocomplete="off" spellcheck="false">
+        <button class="btn btn-ghost btn-icon" type="button" onclick="togKey()" title="Mostrar/ocultar">👁️</button>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Modelo</label>
+      <div style="display:flex;gap:6px">
+        <select id="model-sel" class="w-full" onchange="cfgModelChange()"></select>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="loadModels()" title="Cargar los modelos disponibles para tu clave">↻ Cargar</button>
+      </div>
+      <input type="text" id="model-custom" class="w-full" placeholder="ID del modelo, p. ej. gemini-3.8-flash" style="margin-top:6px;display:none" spellcheck="false">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:13px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="testConn()">🔌 Probar conexión</button>
+      <span id="cfg-status" style="font-size:12px;color:var(--fg-3)"></span>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Apariencia</label>
+      <select id="theme-sel" class="w-full" onchange="setTheme(this.value)">
+        <option value="">Sistema (automático)</option>
+        <option value="light">Claro</option>
+        <option value="dark">Oscuro</option>
+      </select>
+    </div>
+    <div class="modal-row modal-field">
+      <div><label class="modal-label">Pomodoro: trabajo (min)</label><input type="number" id="cfg-pw" min="1" max="180" class="w-full"></div>
+      <div><label class="modal-label">Pomodoro: descanso (min)</label><input type="number" id="cfg-pb" min="1" max="60" class="w-full"></div>
+    </div>
+    <div class="modal-field" id="backup-field">
+      <label class="modal-label">Copia de seguridad de tus datos</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" type="button" onclick="exportData()">⬇️ Exportar datos</button>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="$('imp-file').click()">⬆️ Importar datos</button>
+        <input type="file" id="imp-file" accept=".json,application/json" hidden onchange="importData(this)">
+      </div>
+      <div id="data-status" class="plan-sub"></div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Cuenta</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px">
+        <span id="acct-email" style="color:var(--fg-2)"></span>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="fbSignOut()">Cerrar sesión</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeM('modal-cfg')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCfg()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVA / EDITAR TAREA -->
+<div id="modal-ev" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-ev')">
+  <div class="modal">
+    <div class="modal-title" id="ev-mtitle">📅 Nueva sesión de estudio</div>
+    <div class="modal-sub" id="ev-msub">Registra un bloque de tiempo en el planificador.</div>
+    <div class="modal-field">
+      <label class="modal-label">Título / descripción</label>
+      <input type="text" id="ev-title" class="w-full" placeholder="Ej: Tema 5 — Acto administrativo">
+    </div>
+    <div class="modal-row modal-field">
+      <div><label class="modal-label">Fecha</label><input type="date" id="ev-date" class="w-full"></div>
+      <div><label class="modal-label">Tipo</label>
+        <select id="ev-type" class="w-full">
+          <option value="study">📖 Estudio de tema</option>
+          <option value="repaso">🔄 Repaso</option>
+          <option value="test">📝 Práctica / simulacro</option>
+          <option value="other">🎯 Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Tema (opcional)</label>
+      <select id="ev-tema" class="w-full"></select>
+    </div>
+    <div class="modal-row modal-field">
+      <div><label class="modal-label">Hora inicio</label><input type="time" id="ev-s" value="09:00" class="w-full"></div>
+      <div><label class="modal-label">Hora fin</label><input type="time" id="ev-e" value="11:00" class="w-full"></div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Tiempo real dedicado en minutos (opcional)</label>
+      <input type="number" id="ev-real" min="0" max="900" class="w-full" placeholder="Se rellena solo con el temporizador">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeM('modal-ev')">Cancelar</button>
+      <button class="btn btn-primary" id="ev-save" onclick="saveEv()">Guardar tarea</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TAREA -->
+<div id="modal-task" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-task')">
+  <div class="modal">
+    <div class="modal-title" id="tk-title"></div>
+    <div class="modal-sub" id="tk-meta"></div>
+    <div id="tk-desc" class="tk-desc"></div>
+    <label class="modal-label">¿Has completado esta tarea?</label>
+    <div class="st-seg" id="tk-status"></div>
+    <div class="plan-sub" id="tk-note"></div>
+    <div class="tk-acts">
+      <button class="btn btn-primary btn-sm" onclick="tmStartCurrent()">▶ Iniciar temporizador</button>
+      <button class="btn btn-ghost btn-sm" onclick="editTask()">✏️ Editar</button>
+      <button class="btn btn-ghost btn-sm" onclick="postponeTask()" title="Pasarla a mañana (o un día después de su fecha)">⏭ Posponer</button>
+      <a class="btn btn-ghost btn-sm" id="tk-gcal" href="#" target="_blank" rel="noopener noreferrer">📅 Google Calendar</a>
+    </div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="btn btn-ghost" id="tk-del" style="color:var(--danger)" onclick="delTask()">🗑 Eliminar</button>
+      <button class="btn btn-ghost" onclick="closeM('modal-task')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FECHAS CLAVE -->
+<div id="modal-fx" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-fx')">
+  <div class="modal">
+    <div class="modal-title">⏳ Fechas clave</div>
+    <div class="modal-sub">Con la fecha del examen, la IA planifica hacia atrás y el dashboard proyecta tu ritmo.</div>
+    <div class="modal-field">
+      <label class="modal-label">Fecha del 1.er ejercicio (examen teórico)</label>
+      <input type="date" id="fx-date" class="w-full">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Fecha de publicación en el BORM de la fecha del 1.er ejercicio</label>
+      <input type="date" id="fx-borm" class="w-full">
+      <div class="plan-sub">El temario se actualiza a ese día: te avisaré para que revises cambios legislativos.</div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Hitos</label>
+      <div id="fx-hitos"></div>
+      <div class="res-add"><input type="text" id="fx-new" placeholder="Otro hito…" onkeydown="if(event.key==='Enter')fxAddCustom()"><button class="btn btn-ghost btn-sm" onclick="fxAddCustom()">Añadir</button></div>
+      <div class="quick-prompts" id="fx-sug" style="margin-top:8px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeM('modal-fx')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFechas()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CORREGIR DESARROLLO -->
+<div id="modal-corr" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-corr')">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-title">✍️ Corregir un desarrollo</div>
+    <div class="modal-sub">Escribe o dicta cómo desarrollarías el tema en el examen. El tutor lo compara con el contenido esperado y marca las omisiones.</div>
+    <div class="modal-field"><label class="modal-label">Tema</label><select id="corr-tema" class="w-full"></select></div>
+    <div class="modal-field">
+      <textarea id="corr-txt" class="w-full" rows="11" placeholder="Tu desarrollo…" oninput="corrCount()" style="resize:vertical"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <button class="btn btn-ghost btn-sm" id="corr-mic" type="button" onclick="corrMic()">🎤 Dictar</button>
+        <span class="plan-sub" id="corr-count">0 palabras</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeM('modal-corr')">Cancelar</button>
+      <button class="btn btn-primary" onclick="corrSend()">Corregir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DUDAS PENDIENTES -->
+<div id="modal-db" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-db')">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title">❓ Dudas pendientes</div>
+    <div class="modal-sub">El tutor las tiene presentes en todas las conversaciones y el planificador también.</div>
+    <div class="res-add" style="margin-bottom:12px"><input type="text" id="db-new" placeholder="Anota una duda…" onkeydown="if(event.key==='Enter')addDoubtFromModal()"><select id="db-tema"></select><button class="btn btn-primary btn-sm" onclick="addDoubtFromModal()">Añadir</button></div>
+    <div id="db-list"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeM('modal-db')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: TERMINAR SESIÓN -->
+<div id="modal-tm" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-tm')">
+  <div class="modal">
+    <div class="modal-title">⏹ Terminar sesión</div>
+    <div class="modal-sub" id="tm-sum"></div>
+    <div class="modal-field"><label class="modal-label">Minutos de estudio (puedes corregirlos)</label><input type="number" id="tm-mins" min="1" max="600" class="w-full"></div>
+    <div id="tm-task-box"><label class="modal-label">¿Has completado la tarea?</label><div class="st-seg" id="tm-st"></div></div>
+    <div id="tm-free-box" class="modal-field"><label class="modal-label">¿Qué has estudiado?</label><select id="tm-tema" class="w-full"></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeM('modal-tm')">Seguir luego</button>
+      <button class="btn btn-primary" onclick="tmConfirm()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js?v=2"></script>
+<script src="js/core.js?v=2"></script>
+<script src="js/planner.js?v=2"></script>
+<script src="js/temas.js?v=2"></script>
+<script src="js/dashboard.js?v=2"></script>
+<script src="js/stats.js?v=2"></script>
+<script src="js/timer.js?v=2"></script>
+<script src="js/tutor.js?v=2"></script>
+<script type="module" src="js/sync.js?v=2"></script>
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+</body>
+</html>
