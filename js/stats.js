@@ -4,6 +4,7 @@
 // Horas efectivas de una tarea: el tiempo real del temporizador si existe;
 // si no, las planificadas (completa) o la mitad (parcial).
 function effHours(e){
+  if(e.type==='fisico')return 0;      // el entrenamiento físico no cuenta como horas de estudio
   if(e.real!=null&&isFinite(e.real))return e.real/60;
   if(e.status==='done')return hrs(e);
   if(e.status==='partial')return hrs(e)/2;

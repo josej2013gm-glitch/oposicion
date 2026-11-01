@@ -7,16 +7,16 @@ function todayD(){const d=new Date();d.setHours(0,0,0,0);return d;}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 function addMin(hm,min){const [h,m]=hm.split(':').map(Number);const t=Math.min(h*60+m+Math.round(min),23*60+59);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');}
-function hrs(ev){const a=(ev.s||'0:0').split(':').map(Number),b=(ev.e||'0:0').split(':').map(Number);return Math.max(0,(b[0]*60+b[1]-a[0]*60-a[1])/60);}
+function hrs(ev){if(ev.type==='fisico')return 0;const a=(ev.s||'0:0').split(':').map(Number),b=(ev.e||'0:0').split(':').map(Number);return Math.max(0,(b[0]*60+b[1]-a[0]*60-a[1])/60);}
 function fmtH(h){return (Math.round(h*10)/10).toString().replace('.',',')+' h';}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
 const DOW=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const DOW_S=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const ORDER=[1,2,3,4,5,6,0];
-const TYPE_ICON={study:'📖',repaso:'🔄',test:'📝',psico:'🧩',other:'🎯'};
-const TYPE_LBL={study:'Estudio',repaso:'Repaso',test:'Test / simulacro',psico:'Psicotécnicos',other:'Otro'};
-const TYPE_COL={study:'var(--accent)',repaso:'var(--ok)',test:'var(--info)',psico:'#8B5CF6',other:'var(--warn)'};
+const TYPE_ICON={study:'📖',repaso:'🔄',test:'📝',psico:'🧩',fisico:'🏋️',other:'🎯'};
+const TYPE_LBL={study:'Estudio',repaso:'Repaso',test:'Test / simulacro',psico:'Psicotécnicos',fisico:'Entrenamiento',other:'Otro'};
+const TYPE_COL={study:'var(--accent)',repaso:'var(--ok)',test:'var(--info)',psico:'#8B5CF6',fisico:'#F97316',other:'var(--warn)'};
 const ST_LBL={done:'Completada',partial:'Parcial',no:'No hecha'};
 const ST_ICON={done:'✓',partial:'½',no:'✕'};
 
@@ -37,7 +37,7 @@ function stats(evs){
 function refreshViews(){
   const act=PANELS.find(p=>$('p-'+p).classList.contains('active'));
   if(act==='cal')renderCal();else if(act==='plan')renderPlan();else if(act==='dashboard')renderDash();
-  else if(act==='temas')renderTemas();else if(act==='stats')renderStats();else if(act==='psico')renderPsico();
+  else if(act==='temas')renderTemas();else if(act==='stats')renderStats();else if(act==='psico')renderPsico();else if(act==='entr')renderEntr();
 }
 function temaShort(x){const s=x.t.split(/[:.]/)[0];return s.length>90?s.slice(0,88)+'…':s;}
 
@@ -120,7 +120,7 @@ ${recTxt}
 
 Cumplimiento últimos 14 días: ${c.pct==null?'sin datos':c.pct+'%'} (${c.done} completadas, ${c.partial} parciales, ${c.no} no hechas, ${c.none} sin marcar).
 ${dud?`\nDUDAS PENDIENTES DEL OPOSITOR:\n${dud}\n`:''}${psicoPromptTxt(ws,keep)}
-TAREAS YA FIJADAS EN EL CALENDARIO PARA ESE PERIODO (respétalas y descuenta su tiempo de la disponibilidad de ese día):
+TAREAS YA FIJADAS EN EL CALENDARIO PARA ESE PERIODO (respétalas y descuenta su tiempo de la disponibilidad de ese día; las de tipo «Entrenamiento» son entrenamiento físico: no ocupes esa franja pero NO descuentes su tiempo de las horas de estudio):
 ${keepTxt}
 ${extra?`\nINDICACIONES DEL OPOSITOR (tienen prioridad):\n${extra}\n`:''}
 REGLAS:
@@ -172,7 +172,8 @@ function weekKeep(ws){return eventsIn(planFrom(ws),addDays(ws,6)).filter(e=>!(e.
 function weekReplace(ws){return eventsIn(planFrom(ws),addDays(ws,6)).filter(e=>e.src==='ia'&&!e.status);}
 function schedule(tasks,keep){
   const cur={};
-  keep.forEach(e=>{if(e.e>(cur[e.date]||''))cur[e.date]=e.e;});
+  const fis=keep.filter(e=>e.type==='fisico');
+  keep.forEach(e=>{if(e.type!=='fisico'&&e.e>(cur[e.date]||''))cur[e.date]=e.e;});
   // hoy: no programar en horas que ya han pasado
   const now=new Date(),ts=ymd(now);
   const mins=Math.ceil((now.getHours()*60+now.getMinutes()+1)/30)*30;
@@ -181,7 +182,10 @@ function schedule(tasks,keep){
     let base=S.startHour;
     if(t.date===ts&&nowHM>base)base=nowHM;
     const s=cur[t.date]&&cur[t.date]>base?cur[t.date]:base;
-    const e=addMin(s,t.h*60);cur[t.date]=e;return {...t,s,e};
+    let s2=s,e=addMin(s2,t.h*60);
+    // el entrenamiento físico es un bloque fijo: la tarea de estudio se coloca después
+    for(let k=0;k<5;k++){const ov=fis.find(f=>f.date===t.date&&f.s<e&&f.e>s2);if(!ov)break;s2=ov.e;e=addMin(s2,t.h*60);}
+    cur[t.date]=e;return {...t,s:s2,e};
   });
 }
 
@@ -325,7 +329,7 @@ function renderWeekList(ws,we){
   el.innerHTML=wEvs.map(e=>{const h=e.date!==last?`<div class="day-hdr">${esc(cap(pd(e.date).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})))}</div>`:'';last=e.date;return h+taskRow(e);}).join('');
 }
 function stBtns(e){
-  return (e.status==='done'?'':e.type==='psico'?`<button class="st-btn s-play" title="Hacer un cuestionario" aria-label="Hacer un cuestionario" onclick="psicoFromTask('${e.id}')">🧩</button>`:`<button class="st-btn s-play" title="Iniciar temporizador" aria-label="Iniciar temporizador" onclick="tmStart('${e.id}')">▶</button>`)
+  return (e.status==='done'?'':e.type==='fisico'&&e.entr?`<button class="st-btn s-play" title="Registrar el entrenamiento" aria-label="Registrar el entrenamiento" onclick="entrLogOpen('${e.id}')">📝</button>`:e.type==='psico'?`<button class="st-btn s-play" title="Hacer un cuestionario" aria-label="Hacer un cuestionario" onclick="psicoFromTask('${e.id}')">🧩</button>`:`<button class="st-btn s-play" title="Iniciar temporizador" aria-label="Iniciar temporizador" onclick="tmStart('${e.id}')">▶</button>`)
     +['done','partial','no'].map(k=>`<button class="st-btn s-${k}${e.status===k?' on':''}" title="${ST_LBL[k]}" aria-label="${ST_LBL[k]}" onclick="setStatus('${e.id}','${k}')">${ST_ICON[k]}</button>`).join('');
 }
 function taskRow(e){
@@ -381,11 +385,14 @@ function openTask(id){
   $('tk-status').innerHTML=['done','partial','no'].map(k=>`<button class="btn btn-ghost${e.status===k?' on-'+k:''}" onclick="setStatus('${e.id}','${k}')">${ST_ICON[k]} ${ST_LBL[k]}</button>`).join('');
   $('tk-gcal').href=gcalUrl(e);
   $('tk-psico').style.display=e.type==='psico'?'':'none';
+  $('tk-entr').style.display=e.type==='fisico'&&e.entr?'':'none';
+  $('tk-timer').style.display=e.type==='fisico'?'none':'';
   let note='';
   if(e.advTo!=null)note=`✓ El Tema ${e.tema} pasó a «${ESTADOS[e.advTo]}» al completar esta tarea.`;
   else if(e.adv&&e.tema)note=`Al marcarla como completada, el Tema ${e.tema} avanzará de estado en «Temas» (ahora: ${ESTADOS[td(e.tema).e]}).`;
   else if(e.tema&&(e.type==='study'||e.type==='repaso'))note='Esta es una parte del tema: completarla no cambia su estado.';
   if(e.type==='psico')note=(e.pq&&e.pq.length?'Cuestionarios hechos en esta tarea: '+e.pq.join(' · ')+'. ':'')+'Pulsa «Hacer cuestionario»: se abre el sugerido y el tiempo se suma a la tarea.';
+  if(e.type==='fisico')note=e.entr?'Pulsa «Registrar entrenamiento» al terminar: tus marcas, el esfuerzo y las molestias ajustan la semana siguiente.':'';
   $('tk-note').textContent=note;
   $('modal-task').style.display='flex';
 }

@@ -564,3 +564,32 @@ kbd { font-family: var(--mono); font-size: 11px; background: var(--surface-2); b
   .ps-facts { grid-template-columns: repeat(2, 1fr) }
   .ps-q-text { font-size: 15px }
 }
+
+/* ===== Entrenamiento físico ===== */
+.ev-fisico { background: rgba(249,115,22,.14); color: #C2410C }
+:root[data-theme="dark"] .ev-fisico { color: #FDBA74 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ev-fisico { color: #FDBA74 } }
+.en-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:12px }
+.en-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px }
+.en-card { padding:12px 14px }
+.en-ch { display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px }
+.en-val { font-size:26px; font-weight:700; line-height:1.2 }
+.en-sec { font-weight:600; margin:14px 0 6px; font-size:13px }
+.en-parq { margin-top:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px }
+.en-q { display:flex; gap:8px; align-items:flex-start; font-size:12.5px; margin:5px 0; cursor:pointer }
+.en-q input { margin-top:3px }
+.en-ok { border-top:1px dashed var(--border); padding-top:8px; margin-top:8px }
+.en-chk { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:13px }
+.en-chk label { display:flex; gap:5px; align-items:center; cursor:pointer }
+.en-mk { display:grid; grid-template-columns:minmax(120px,1fr) minmax(130px,1fr) minmax(110px,1fr) auto; gap:6px; align-items:center; margin:6px 0 }
+.en-mk-h { grid-column:1/-1; font-size:13px }
+.en-pv { font-size:12px; min-width:90px }
+.en-pv.good { color:var(--ok) } .en-pv.mid { color:var(--warn) } .en-pv.bad { color:var(--danger) }
+.en-plan-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+.en-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px }
+.en-det summary { cursor:pointer }
+.en-hist { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px }
+.en-hh { font-weight:600; font-size:12.5px; margin-bottom:4px }
+.en-hr { display:flex; justify-content:space-between; gap:8px; font-size:12px; padding:2px 0 }
+.en-pr { font-size:12.5px; margin:8px 0 }
+@media (max-width:560px) { .en-mk { grid-template-columns:1fr 1fr } .en-pv { grid-column:1/-1 } }
