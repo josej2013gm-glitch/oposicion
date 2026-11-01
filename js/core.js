@@ -201,7 +201,7 @@ function exportData(){
   const filename='oposicion-datos-'+ymd(new Date())+'.json';
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=filename;
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
-  dataStatus('✓ Descargado: '+esc(filename)+' (los documentos adjuntos no van dentro: están en Firebase Storage)');
+  dataStatus('✓ Descargado: '+esc(filename)+' (los documentos adjuntos no van dentro: están en la nube, aparte)');
 }
 let pendingImport=null;
 function importData(inp){

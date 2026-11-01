@@ -1,7 +1,7 @@
 // Service worker: permite instalar la web como app y abrirla sin conexión.
 // Estrategia: red primero para los archivos de la propia web (así siempre ves la última versión)
 // con copia en caché de respaldo; los scripts de Firebase y las fuentes se guardan al usarse.
-// Las llamadas a Firestore, Storage, Google Auth y Gemini NO se cachean nunca.
+// Las llamadas a Firestore, Google Auth y Gemini NO se cachean nunca.
 const CACHE = 'oposicion-pl-v2';
 const SHELL = ['./', 'index.html', 'styles.css', 'manifest.json', 'icons/icon-192.png', 'icons/icon.svg',
   'js/data.js', 'js/core.js', 'js/planner.js', 'js/temas.js', 'js/dashboard.js', 'js/stats.js', 'js/timer.js', 'js/tutor.js', 'js/sync.js'];

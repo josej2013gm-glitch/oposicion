@@ -7,19 +7,17 @@
 //   users/{uid}/store/chat     → historial del tutor y dudas pendientes
 //   users/{uid}/events/{id}    → una tarea por documento
 //   users/{uid}                → documento ÚNICO de la versión anterior (solo se lee para migrar)
-// Archivos adjuntos: Firebase Storage en users/{uid}/docs/…
+// Archivos adjuntos: troceados en base64 en users/{uid}/files/{idArchivo}_{n} (solo Firestore, plan gratuito)
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache, doc, collection, onSnapshot, setDoc, getDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js";
 
-// Configuración pública del proyecto (no es secreta: la seguridad la dan las reglas de Firestore y Storage)
+// Configuración pública del proyecto (no es secreta: la seguridad la dan las reglas de Firestore)
 const firebaseConfig = {
   apiKey: "AIzaSyBDu-PpJYWhMHF4H9HIOKghRkgO9QtRKVQ",
   authDomain: "gestor-oposicion.firebaseapp.com",
   projectId: "gestor-oposicion",
-  storageBucket: "gestor-oposicion.firebasestorage.app",
   messagingSenderId: "467544293584",
   appId: "1:467544293584:web:2d39aaab0c9644cc945ed5"
 };
@@ -27,7 +25,6 @@ const ALLOWED_EMAIL = "josej2013gm@gmail.com";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const storage = getStorage(app);
 let db;
 try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
 catch (e) { db = initializeFirestore(app, { localCache: memoryLocalCache() }); }
@@ -156,19 +153,51 @@ addEventListener('pagehide', () => { if (saveTimer) flush(); });
 addEventListener('beforeunload', e => { if (saveTimer || hasPending()) { if (saveTimer) flush(); e.preventDefault(); e.returnValue = ''; } });
 window.fbSignOut = async () => { if (saveTimer) flush(); await signOut(auth); location.reload(); };
 
-// ---------------- archivos adjuntos (Firebase Storage) ----------------
-window.cloudUpload = (file, tema, onProgress) => new Promise((resolve, reject) => {
-  if (!uid) return reject({ code: 'storage/unauthenticated' });
-  const safe = file.name.replace(/[^\w.\- ()]+/g, '_').slice(-80);
-  const path = `users/${uid}/docs/t${tema}/${Date.now()}_${safe}`;
-  const task = uploadBytesResumable(sRef(storage, path), file, { contentType: file.type || 'application/octet-stream' });
-  task.on('state_changed',
-    s => { if (onProgress && s.totalBytes) onProgress(s.bytesTransferred / s.totalBytes); },
-    reject,
-    () => resolve({ path, size: file.size, name: file.name, type: file.type || '' }));
+// ---------------- archivos adjuntos (en Firestore, sin Storage) ----------------
+// Cada archivo se trocea en bloques base64 de 600 000 caracteres (< 1 MB por documento).
+const CHUNK = 600000;
+const fileDoc = (id, i) => doc(db, 'users', uid, 'files', id + '_' + i);
+const readB64 = f => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(String(r.result).split(',')[1] || '');
+  r.onerror = () => rej(r.error);
+  r.readAsDataURL(f);
 });
-window.cloudFileUrl = path => getDownloadURL(sRef(storage, path));
-window.cloudDeleteFile = path => deleteObject(sRef(storage, path));
+window.cloudUpload = async (file, tema, onProgress) => {
+  if (!uid) throw { code: 'files/unauthenticated' };
+  const b64 = await readB64(file);
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const n = Math.max(1, Math.ceil(b64.length / CHUNK));
+  try {
+    for (let i = 0; i < n; i++) {
+      await setDoc(fileDoc(id, i), { d: b64.slice(i * CHUNK, (i + 1) * CHUNK), i, n, tema, name: file.name.slice(-120), type: file.type || '' });
+      if (onProgress) onProgress((i + 1) / n);
+    }
+  } catch (e) {
+    try { await window.cloudDeleteFile(id, n); } catch (_) {}
+    throw e;
+  }
+  return { path: id + ':' + n, size: file.size, name: file.name, type: file.type || '' };
+};
+const splitRef = p => { const [id, n] = String(p).split(':'); return { id, n: parseInt(n, 10) || 1 }; };
+window.cloudFileUrl = async (p, type) => {
+  const { id, n } = splitRef(p);
+  const snaps = await Promise.all(Array.from({ length: n }, (_, i) => getDoc(fileDoc(id, i))));
+  if (snaps.some(s => !s.exists())) throw { code: 'files/not-found' };
+  const parts = snaps.map(s => {
+    const bin = atob(s.data().d), u = new Uint8Array(bin.length);
+    for (let k = 0; k < bin.length; k++) u[k] = bin.charCodeAt(k);
+    return u;
+  });
+  return URL.createObjectURL(new Blob(parts, { type: type || snaps[0].data().type || 'application/octet-stream' }));
+};
+window.cloudDeleteFile = async (p, nOverride) => {
+  const { id, n } = splitRef(p);
+  const total = nOverride || n;
+  const batch = writeBatch(db);
+  for (let i = 0; i < total; i++) batch.delete(fileDoc(id, i));
+  await batch.commit();
+};
 
 // ---------------- arranque ----------------
 function stopListeners() { unsubs.forEach(u => u()); unsubs = []; }

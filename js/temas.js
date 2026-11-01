@@ -168,7 +168,7 @@ function resHTML(n){
     <div class="res-sec"><div class="res-h">⚠️ Puntos débiles</div>${weak}
       <div class="res-add"><input type="text" id="wk-${n}" placeholder="Ej.: plazos del procedimiento sancionador" onkeydown="if(event.key==='Enter')addWeak(${n})"><button class="btn btn-ghost btn-sm" onclick="addWeak(${n})">Añadir</button></div></div>
     <div class="res-sec"><div class="res-h">📎 Documentos</div>${docs}
-      <div class="res-add"><input type="file" id="fl-${n}" multiple hidden onchange="uploadDocs(${n},this)"><button class="btn btn-ghost btn-sm" onclick="$('fl-${n}').click()">＋ Adjuntar documentos</button><span class="res-meta" id="up-${n}">PDF, Word, imágenes… (máx. 25 MB)</span></div></div>
+      <div class="res-add"><input type="file" id="fl-${n}" multiple hidden onchange="uploadDocs(${n},this)"><button class="btn btn-ghost btn-sm" onclick="$('fl-${n}').click()">＋ Adjuntar documentos</button><span class="res-meta" id="up-${n}">PDF, Word, imágenes… (máx. 5 MB)</span></div></div>
     <div class="res-meta">Último repaso: ${d.last?esc(pd(d.last).toLocaleDateString('es-ES')):'—'} · Repasos: ${d.reps||0}</div>
   </div>`;
 }
@@ -188,19 +188,19 @@ function delWeak(n,id){const d=td(n);d.weak=d.weak.filter(x=>x.id!==id);saveS();
 
 function upErrText(e){
   const c=e&&e.code||'';
-  if(c==='storage/unauthorized'||c==='storage/unauthenticated')return 'Firebase Storage no permite la subida: publica las reglas de storage.rules (ver instrucciones).';
-  if(['storage/unknown','storage/bucket-not-found','storage/project-not-found','storage/no-default-bucket'].includes(c))return 'Firebase Storage no está activado en el proyecto (consola Firebase → Storage → Comenzar).';
-  if(c==='storage/quota-exceeded')return 'Se ha superado la cuota de Storage.';
-  if(c==='storage/canceled')return 'Subida cancelada.';
+  if(c==='permission-denied'||c==='files/unauthenticated')return 'Firestore no permite guardar el archivo: revisa que las reglas de firestore.rules estén publicadas.';
+  if(c==='files/not-found')return 'El archivo no se encuentra (puede estar a medio subir o borrado).';
+  if(c==='resource-exhausted')return 'Se ha superado la cuota diaria gratuita de Firestore. Inténtalo mañana.';
   return 'No se pudo completar ('+(c||e&&e.message||'error')+').';
 }
+const DOC_MAX=5*1024*1024;
 async function uploadDocs(n,inp){
   const files=[...inp.files];inp.value='';if(!files.length)return;
   const st=$('up-'+n);
   if(typeof window.cloudUpload!=='function'){st.textContent='La subida no está disponible todavía.';return;}
   if(!navigator.onLine){st.textContent='Sin conexión: los documentos solo se pueden subir con internet.';return;}
   for(const f of files){
-    if(f.size>25*1024*1024){st.textContent=`«${f.name}» supera los 25 MB.`;continue;}
+    if(f.size>DOC_MAX){st.textContent=`«${f.name}» supera los 5 MB (límite del plan gratuito). Comprímelo o guárdalo en Drive y añade el enlace.`;continue;}
     try{
       st.textContent=`Subiendo «${f.name}»… 0 %`;
       const r=await window.cloudUpload(f,n,p=>{st.textContent=`Subiendo «${f.name}»… ${Math.round(p*100)} %`;});
@@ -215,14 +215,14 @@ async function openDoc(n,id){
   if(typeof window.cloudFileUrl!=='function')return;
   const w=window.open('','_blank');
   try{
-    const u=await window.cloudFileUrl(f.path);
+    const u=await window.cloudFileUrl(f.path,f.type);
     if(w)w.location.href=u;else location.href=u;
   }catch(e){if(w)w.close();toast('✕ '+upErrText(e),6000);}
 }
 async function delDoc(n,id){
   const d=td(n),f=d.docs.find(x=>x.id===id);if(!f)return;
-  if(!confirm(`¿Eliminar «${f.name}»? Se borrará también de Firebase Storage.`))return;
+  if(!confirm(`¿Eliminar «${f.name}»? Se borrará también de la nube.`))return;
   try{await window.cloudDeleteFile(f.path);}
-  catch(e){if(!(e&&e.code==='storage/object-not-found')){toast('✕ '+upErrText(e),6000);return;}}
+  catch(e){if(!(e&&e.code==='files/not-found')){toast('✕ '+upErrText(e),6000);return;}}
   d.docs=d.docs.filter(x=>x.id!==id);saveS();rerenderTema(n);
 }
