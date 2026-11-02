@@ -212,7 +212,7 @@ body { display: flex; flex-direction: column }
 
 /* FILTERS */
 .filters { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap }
-input[type=text], input[type=date], input[type=time], select, textarea {
+input[type=text], input[type=number], input[type=date], input[type=time], select, textarea {
   font-family: var(--font); font-size: 13px; color: var(--fg);
   background: var(--surface-2); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: 6px 10px; outline: none;
@@ -593,3 +593,10 @@ kbd { font-family: var(--mono); font-size: 11px; background: var(--surface-2); b
 .en-hr { display:flex; justify-content:space-between; gap:8px; font-size:12px; padding:2px 0 }
 .en-pr { font-size:12.5px; margin:8px 0 }
 @media (max-width:560px) { .en-mk { grid-template-columns:1fr 1fr } .en-pv { grid-column:1/-1 } }
+.en-sets { display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:8px }
+.en-set { display:flex; flex-direction:column; gap:2px }
+.en-set label { font-size:11px }
+.en-set input { width:100%; box-sizing:border-box }
+.en-rec { padding:8px 0; border-bottom:1px solid var(--border) }
+.en-rec:last-child { border-bottom:none }
+.en-rec-h { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px }
