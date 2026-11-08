@@ -39,7 +39,7 @@ function stats(evs){
 function refreshViews(){
   const act=PANELS.find(p=>$('p-'+p).classList.contains('active'));
   if(act==='cal')renderCal();else if(act==='plan')renderPlan();else if(act==='dashboard')renderDash();
-  else if(act==='temas')renderTemas();else if(act==='stats')renderStats();
+  else if(act==='temas')renderTemas();else if(act==='stats')renderStats();else if(act==='sims')renderSims();
 }
 function temaShort(x){const s=x.t.split(/[:.]/)[0];return s.length>90?s.slice(0,88)+'…':s;}
 

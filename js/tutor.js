@@ -176,6 +176,12 @@ Estado actual del opositor: ${start}/${total} temas iniciados, ${cons} consolida
     if(wk.length)s+=`\nPuntos débiles que el opositor ha anotado: ${wk.join('; ')}.`;
     if(d.note)s+=`\nNotas del opositor (extracto):\n${d.note.slice(0,1500)}`;
   }
+  if(S.sims&&S.sims.length){
+    const g=simAgg(),f=v=>v==null?'sin datos':(Math.round(v*100)/100).toString().replace('.',',');
+    s+=`\n\nSIMULACROS hechos (medias): Test ${f(g.test.avg)}/5 (${g.test.n}), Callejero ${f(g.callejero.avg)}/2 (${g.callejero.n}), Escrito ${f(g.escrito.avg)}/5 (${g.escrito.n}). Nota teórica estimada: ${f(g.global.sum)}/12.`;
+    const esc5=S.sims.filter(x=>x.tipo==='escrito').sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+    if(esc5.length)s+=' Últimos escritos: '+esc5.map(x=>`T${x.tema} ${f(x.nota)}`).join(', ')+'.';
+  }
   const dud=S.doubts.filter(x=>!x.done).slice(0,10);
   if(dud.length)s+=`\n\nDUDAS PENDIENTES que el opositor anotó (tenlas presentes y resuélvelas si vienen al caso):\n`+dud.map(x=>`- ${x.tema?'T'+x.tema+': ':''}${x.text}`).join('\n');
   s+=S.ai.search

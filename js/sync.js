@@ -7,6 +7,7 @@
 //   users/{uid}/store/chat     → historial del tutor y dudas pendientes
 //   (store/psico y store/entr, de versiones anteriores, ya no se leen ni se escriben)
 //   users/{uid}/events/{id}    → una tarea por documento
+//   users/{uid}/sims/{id}      → un simulacro por documento (Test, Callejero o Escrito con su informe)
 //   users/{uid}                → documento ÚNICO de la versión anterior (solo se lee para migrar)
 // Archivos adjuntos: troceados en base64 en users/{uid}/files/{idArchivo}_{n} (solo Firestore, plan gratuito)
 // ============================================================
@@ -78,11 +79,14 @@ const ind = document.getElementById('sync-ind');
 let uid = null, unsubs = [], started = false, starting = false, booting = false;
 let saveTimer = null, online = navigator.onLine, syncErr = false;
 const lastPart = {};           // JSON de cada documento tal como está en la nube
-const lastEv = {};             // JSON de cada tarea tal como está en la nube
-const pend = { config: false, temas: false, chat: false, events: false };
-const ready = { config: false, temas: false, chat: false, events: false };
+// Colecciones con un documento por elemento: clave del estado S → nombre de la colección en Firestore
+const COLS = { events: 'events', sims: 'sims' };
+const COL_NAMES = Object.keys(COLS);
+const lastCol = { events: {}, sims: {} };   // JSON de cada elemento tal como está en la nube
+const pend = { config: false, temas: false, chat: false, events: false, sims: false };
+const ready = { config: false, temas: false, chat: false, events: false, sims: false };
 const firstData = {};          // primer contenido de cada documento
-let firstEvents = [], evSnap = null;
+const firstCol = { events: [], sims: [] }, colSnap = { events: null, sims: null };
 
 const toast = document.createElement('div'); toast.className = 'sync-toast'; document.body.appendChild(toast);
 function showToast(t) { toast.textContent = t; toast.classList.add('on'); clearTimeout(showToast.t); showToast.t = setTimeout(() => toast.classList.remove('on'), 7000); }
@@ -100,7 +104,7 @@ addEventListener('offline', () => { online = false; paintSync(); });
 addEventListener('resize', paintSync);
 
 const partRef = p => doc(db, 'users', uid, 'store', p);
-const evCol = () => collection(db, 'users', uid, 'events');
+const colRef = k => collection(db, 'users', uid, COLS[k]);
 function partJSON(p) { const o = {}; PARTS[p].forEach(k => { if (S[k] !== undefined) o[k] = S[k]; }); return JSON.stringify(o); }
 function applyPart(p, str) {
   try { const o = JSON.parse(str); PARTS[p].forEach(k => { if (k in o) S[k] = o[k]; }); }
@@ -120,24 +124,7 @@ function flush() {
     lastPart[p] = json;
     jobs.push(setDoc(partRef(p), { data: json, updatedAt: serverTimestamp(), v: 2 }).catch(e => { lastPart[p] = prev; throw e; }));
   }
-  const ops = [], seen = new Set();
-  S.events.forEach(e => {
-    seen.add(e.id);
-    const j = JSON.stringify(e);
-    if (lastEv[e.id] !== j) ops.push({ k: 'set', id: e.id, j, prev: lastEv[e.id], date: e.date });
-  });
-  Object.keys(lastEv).forEach(id => { if (!seen.has(id)) ops.push({ k: 'del', id, prev: lastEv[id] }); });
-  for (let i = 0; i < ops.length; i += 400) {
-    const chunk = ops.slice(i, i + 400), batch = writeBatch(db);
-    chunk.forEach(o => {
-      if (o.k === 'set') { batch.set(doc(evCol(), o.id), { data: o.j, date: o.date, updatedAt: serverTimestamp() }); lastEv[o.id] = o.j; }
-      else { batch.delete(doc(evCol(), o.id)); delete lastEv[o.id]; }
-    });
-    jobs.push(batch.commit().catch(e => {
-      chunk.forEach(o => { if (o.prev === undefined) delete lastEv[o.id]; else lastEv[o.id] = o.prev; });
-      throw e;
-    }));
-  }
+  COL_NAMES.forEach(k => flushCol(k, jobs));
   if (!jobs.length) { paintSync(); return; }
   syncErr = false;
   Promise.all(jobs).then(() => { syncErr = false; paintSync(); }).catch(e => {
@@ -147,6 +134,29 @@ function flush() {
       : '⚠️ No se pudieron guardar los cambios (' + (e && (e.code || e.message)) + '). Se reintentará con el próximo cambio.');
   });
   paintSync();
+}
+// Una escritura por elemento creado/modificado y un borrado por elemento eliminado
+function flushCol(k, jobs) {
+  const last = lastCol[k], list = Array.isArray(S[k]) ? S[k] : [];
+  const ops = [], seen = new Set();
+  list.forEach(e => {
+    if (!e || !e.id) return;
+    seen.add(e.id);
+    const j = JSON.stringify(e);
+    if (last[e.id] !== j) ops.push({ k: 'set', id: e.id, j, prev: last[e.id], date: e.date || '' });
+  });
+  Object.keys(last).forEach(id => { if (!seen.has(id)) ops.push({ k: 'del', id, prev: last[id] }); });
+  for (let i = 0; i < ops.length; i += 400) {
+    const chunk = ops.slice(i, i + 400), batch = writeBatch(db);
+    chunk.forEach(o => {
+      if (o.k === 'set') { batch.set(doc(colRef(k), o.id), { data: o.j, date: o.date, updatedAt: serverTimestamp() }); last[o.id] = o.j; }
+      else { batch.delete(doc(colRef(k), o.id)); delete last[o.id]; }
+    });
+    jobs.push(batch.commit().catch(e => {
+      chunk.forEach(o => { if (o.prev === undefined) delete last[o.id]; else last[o.id] = o.prev; });
+      throw e;
+    }));
+  }
 }
 window.cloudSave = () => { if (!uid || !started || booting) return; clearTimeout(saveTimer); saveTimer = setTimeout(flush, 500); paintSync(); };
 addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && saveTimer) flush(); });
@@ -219,7 +229,7 @@ onAuthStateChanged(auth, user => {
   const acct = document.getElementById('acct-email'); if (acct) acct.textContent = user.email;
   uid = user.uid;
   PART_NAMES.forEach(p => unsubs.push(onSnapshot(partRef(p), { includeMetadataChanges: true }, snap => onPart(p, snap), onListenErr)));
-  unsubs.push(onSnapshot(evCol(), { includeMetadataChanges: true }, onEvents, onListenErr));
+  COL_NAMES.forEach(k => unsubs.push(onSnapshot(colRef(k), { includeMetadataChanges: true }, snap => onCol(k, snap), onListenErr)));
 });
 
 function onPart(p, snap) {
@@ -240,45 +250,48 @@ function onPart(p, snap) {
   }
 }
 
-function onEvents(snap) {
-  pend.events = snap.metadata.hasPendingWrites;
+function onCol(k, snap) {
+  pend[k] = snap.metadata.hasPendingWrites;
   if (!started) {
-    evSnap = snap;
-    ready.events = !(snap.empty && snap.metadata.fromCache);
-    if (!ready.events) waitMsg();
-    firstEvents = snap.docs.map(d => ({ id: d.id, j: d.data().data }));
+    colSnap[k] = snap;
+    ready[k] = !(snap.empty && snap.metadata.fromCache);
+    if (!ready[k]) waitMsg();
+    firstCol[k] = snap.docs.map(d => ({ id: d.id, j: d.data().data }));
     tryStart(); return;
   }
   paintSync();
+  if (!Array.isArray(S[k])) S[k] = [];
+  const last = lastCol[k], list = S[k];
   let changed = false;
   snap.docChanges().forEach(ch => {
     const d = ch.doc;
     if (d.metadata.hasPendingWrites) return;
-    const id = d.id, loc = S.events.find(e => e.id === id);
+    const id = d.id, loc = list.find(e => e.id === id);
     // si hay una edición local sin enviar, gana la local
-    if (loc && lastEv[id] !== undefined && JSON.stringify(loc) !== lastEv[id]) return;
+    if (loc && last[id] !== undefined && JSON.stringify(loc) !== last[id]) return;
     if (ch.type === 'removed') {
-      if (lastEv[id] !== undefined) { delete lastEv[id]; if (loc) { S.events.splice(S.events.indexOf(loc), 1); changed = true; } }
+      if (last[id] !== undefined) { delete last[id]; if (loc) { list.splice(list.indexOf(loc), 1); changed = true; } }
       return;
     }
     const j = d.data().data;
-    if (lastEv[id] === j) return;
+    if (last[id] === j) return;
     let o; try { o = JSON.parse(j); } catch (e) { return; }
-    lastEv[id] = j;
-    const i = S.events.findIndex(e => e.id === id);
-    if (i >= 0) S.events[i] = o; else S.events.push(o);
+    last[id] = j;
+    const i = list.findIndex(e => e.id === id);
+    if (i >= 0) list[i] = o; else list.push(o);
     changed = true;
   });
-  if (changed) { booting = true; try { onRemotePart('events'); } finally { booting = false; } }
+  if (changed) { booting = true; try { onRemotePart(k); } finally { booting = false; } }
 }
 
 async function tryStart() {
   if (started || starting) return;
   const partsReady = PART_NAMES.every(p => ready[p]);
-  const evOk = ready.events || (evSnap && firstData.config);   // sin tareas y offline pero con datos en caché
-  if (!partsReady || !evOk) return;
+  // colección vacía y offline, pero con datos en caché: se puede arrancar
+  const colsOk = COL_NAMES.every(k => ready[k] || (colSnap[k] && firstData.config));
+  if (!partsReady || !colsOk) return;
   starting = true;
-  const anyNew = PART_NAMES.some(p => firstData[p]) || firstEvents.length > 0;
+  const anyNew = PART_NAMES.some(p => firstData[p]) || firstCol.events.length > 0;
   let migrated = false;
   if (!anyNew) {
     // Primera vez con la estructura nueva: ¿hay datos del documento único anterior?
@@ -292,8 +305,10 @@ async function tryStart() {
     } catch (e) { console.warn('No se pudo leer el documento anterior:', e); }
   } else {
     PART_NAMES.forEach(p => { if (firstData[p]) applyPart(p, firstData[p]); });
-    S.events = [];
-    firstEvents.forEach(x => { try { S.events.push(JSON.parse(x.j)); lastEv[x.id] = x.j; } catch (e) { console.error(e); } });
+    COL_NAMES.forEach(k => {
+      S[k] = [];
+      firstCol[k].forEach(x => { try { S[k].push(JSON.parse(x.j)); lastCol[k][x.id] = x.j; } catch (e) { console.error(e); } });
+    });
     PART_NAMES.forEach(p => { lastPart[p] = firstData[p] || ''; });
   }
   started = true; starting = false;

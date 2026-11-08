@@ -6,7 +6,7 @@ const $ = id => document.getElementById(id);
 
 function defaultState(){
   return {
-    temas:{}, events:[], theme:'',
+    temas:{}, events:[], sims:[], theme:'',
     ai:{provider:'gemini', key:'', model:'gemini-3.8-flash', search:false},
     chatLog:[], doubts:[],
     avail:{1:3,2:3,3:3,4:3,5:3,6:4,0:0}, startHour:'09:00',
@@ -30,7 +30,7 @@ function toast(msg,ms){
 // ============================================================
 // NAVEGACIÓN
 // ============================================================
-const PANELS = ['dashboard','temas','plan','cal','stats','tutor'];
+const PANELS = ['dashboard','temas','plan','cal','sims','stats','tutor'];
 
 function nav(name){
   PANELS.forEach(p=>$('p-'+p).classList.toggle('active',p===name));
@@ -42,6 +42,7 @@ function nav(name){
   else if(name==='cal') renderCal();
   else if(name==='dashboard') renderDash();
   else if(name==='stats') renderStats();
+  else if(name==='sims') renderSims();
   else if(name==='tutor'){renderTutorBar();scrollChat();updateApiNotice();}
 }
 
@@ -155,6 +156,7 @@ function normalizeState(){
   const D=defaultState();
   if(!S.temas||typeof S.temas!=='object')S.temas={};
   if(!Array.isArray(S.events))S.events=[];
+  if(!Array.isArray(S.sims))S.sims=[];
   if(!Array.isArray(S.chatLog))S.chatLog=[];
   if(!Array.isArray(S.doubts))S.doubts=[];
   if(!Array.isArray(S.tpl))S.tpl=[];
@@ -171,6 +173,7 @@ function normalizeState(){
   // restos de versiones anteriores
   delete S.gemKey;delete S.req;delete S.boeDate;delete S.psico;delete S.entr;
   S.events=S.events.filter(e=>e&&e.id&&e.date).map(e=>Object.assign({src:'manual',status:null,tema:null,desc:'',adv:false},e));
+  S.sims=S.sims.filter(x=>x&&x.id&&x.date&&SIM_TIPOS[x.tipo]);
   TEMAS.forEach(t=>{
     const d={...temaDef(),...(S.temas[t.n]||{})};
     ['links','weak','docs','h'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[];});
@@ -214,7 +217,8 @@ function importData(inp){
     pendingImport=d;
     const nT=Object.values(d.temas).filter(t=>t&&t.e>0).length;
     const when=j.exportedAt?new Date(j.exportedAt).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'}):'fecha desconocida';
-    dataStatus(`Copia del ${esc(when)}: ${nT} temas iniciados y ${d.events.length} tareas. Sustituirá todos tus datos actuales. <button class="link-plain" onclick="applyImport()">Importar</button> · <button class="link-plain" onclick="pendingImport=null;dataStatus('')">Cancelar</button>`);
+    const nS=Array.isArray(d.sims)?d.sims.length:0;
+    dataStatus(`Copia del ${esc(when)}: ${nT} temas iniciados, ${d.events.length} tareas y ${nS} simulacros. Sustituirá todos tus datos actuales. <button class="link-plain" onclick="applyImport()">Importar</button> · <button class="link-plain" onclick="pendingImport=null;dataStatus('')">Cancelar</button>`);
   };
   r.readAsText(f);
 }

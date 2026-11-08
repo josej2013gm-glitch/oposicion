@@ -1,6 +1,6 @@
 # Oposición Policía Local Cieza
 
-Gestor de estudio del temario (41 temas) para la oposición de Agente de Policía Local de Cieza: estado y repasos de cada tema, planificador con IA, calendario, estadísticas y tutor IA. Los datos se guardan en Firebase (Firestore) y se sincronizan entre dispositivos.
+Gestor de estudio del temario (41 temas) para la oposición de Agente de Policía Local de Cieza: estado y repasos de cada tema, planificador con IA, calendario, estadísticas, simulacros de las pruebas teóricas y tutor IA. Los datos se guardan en Firebase (Firestore) y se sincronizan entre dispositivos.
 
 El botón **Entrenamientos** del menú abre la web aparte: https://josej2013gm-glitch.github.io/entreno/
 
@@ -21,6 +21,7 @@ js/planner.js     planificador IA y calendario
 js/stats.js       estadísticas
 js/timer.js       temporizador / pomodoro
 js/tutor.js       tutor IA (Google AI Studio)
+js/simulacros.js  simulacros de las 3 pruebas teóricas (Test, Callejero, Escrito con evaluación IA)
 ```
 
 ## Publicar en GitHub Pages

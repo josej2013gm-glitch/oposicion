@@ -59,6 +59,7 @@ function renderStats(){
     <div class="card"><div class="card-title">Cumplimiento por grupo</div>${groupCompHTML()}</div></div>`;
   html+=`<div class="card" style="margin-top:14px"><div class="card-title">Actividad (últimas 26 semanas)</div>${heatHTML(ws)}</div>`;
   html+=`<div class="card" style="margin-top:14px"><div class="card-title">Temas que más se te resisten</div>${doubtfulHTML()}</div>`;
+  html+=`<div class="section-label" style="display:flex;justify-content:space-between;align-items:center">🎯 Simulacros <button class="btn btn-ghost btn-sm" onclick="nav('sims')">Ver historial →</button></div>${simSummaryHTML(simAgg())}`;
   $('stats-cont').innerHTML=html;
 }
 
@@ -106,4 +107,27 @@ function doubtfulHTML(){
   return rows.map(r=>`<div class="repaso-row"><span class="rn">T${r.x.n}</span><span class="rt">${esc(r.x.t.split(':')[0])}</span>
     <span class="rec-chips">${r.no?`<span class="badge bno">✕ ${r.no}</span>`:''}${r.pa?`<span class="badge b1">½ ${r.pa}</span>`:''}${r.low?`<span class="badge b1">★ ${td(r.x.n).conf}</span>`:''}${r.weak?`<span class="badge b2">⚠ ${r.weak}</span>`:''}</span>
     <button class="nota-btn" onclick="openTutorTema(${r.x.n})">🎓</button><button class="nota-btn" onclick="openAddEventTema(${r.x.n})">＋</button></div>`).join('');
+}
+
+// ============================================================
+// SIMULACROS: medias por prueba y nota teórica global estimada (máx. 12)
+// ============================================================
+function simAgg(){
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  const out={};
+  SIM_ORDEN.forEach(k=>{
+    const T=SIM_TIPOS[k];
+    const xs=S.sims.filter(x=>x.tipo===k&&x.nota!=null&&isFinite(x.nota))
+      .sort((a,b)=>(a.date+(a.created||'')).localeCompare(b.date+(b.created||'')));
+    const ns=xs.map(x=>x.nota);
+    out[k]={n:xs.length,avg:avg(ns),last5:avg(ns.slice(-5)),best:ns.length?Math.max(...ns):null,worst:ns.length?Math.min(...ns):null,
+      pass:T.min!=null?ns.filter(v=>v>=T.min).length:null,
+      aAvg:avg(xs.map(x=>x.a||0)),fAvg:avg(xs.map(x=>x.f||0)),bAvg:avg(xs.map(x=>x.b||0)),
+      minsAvg:avg(xs.map(x=>x.mins||0)),temas:new Set(xs.map(x=>x.tema)).size};
+  });
+  const have=SIM_ORDEN.filter(k=>out[k].n);
+  const sum=have.reduce((a,k)=>a+out[k].avg,0);
+  out.global={any:have.length>0,complete:have.length===3,missing:SIM_ORDEN.filter(k=>!out[k].n),
+    sum:Math.round(sum*100)/100,ok:SIM_ORDEN.every(k=>SIM_TIPOS[k].min==null||(out[k].avg!=null&&out[k].avg>=SIM_TIPOS[k].min))};
+  return out;
 }

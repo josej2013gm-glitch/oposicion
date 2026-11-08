@@ -15,7 +15,7 @@
 <title>Oposición PL Cieza</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 
@@ -38,6 +38,7 @@
     <button class="nav-btn" data-panel="temas" onclick="nav('temas')"><span class="ni">📚</span>Temas</button>
     <button class="nav-btn" data-panel="plan" onclick="nav('plan')"><span class="ni">✨</span>Planificador</button>
     <button class="nav-btn" data-panel="cal" onclick="nav('cal')"><span class="ni">📅</span>Calendario</button>
+    <button class="nav-btn" data-panel="sims" onclick="nav('sims')"><span class="ni">🎯</span>Simulacros</button>
     <button class="nav-btn" data-panel="stats" onclick="nav('stats')"><span class="ni">📈</span>Estadísticas</button>
     <a class="nav-btn" href="https://josej2013gm-glitch.github.io/entreno/" target="_blank" rel="noopener" title="Abre la web de entrenamientos"><span class="ni">🏋️</span>Entrenamientos ↗</a>
     <a class="nav-btn" href="https://app.politests.es/" target="_blank" rel="noopener" title="Abre la web de tests"><span class="ni">📝</span>Test ↗</a>
@@ -171,6 +172,11 @@
       </div>
     </div>
 
+    <!-- SIMULACROS -->
+    <div id="p-sims" class="panel">
+      <div id="sims-cont"></div>
+    </div>
+
     <!-- ESTADÍSTICAS -->
     <div id="p-stats" class="panel">
       <div id="stats-cont"></div>
@@ -210,6 +216,7 @@
 </nav>
 <div id="more-sheet" class="more-sheet" hidden onclick="if(event.target===this)toggleMore(false)">
   <div class="more-card">
+    <button onclick="toggleMore(false);nav('sims')"><span class="ni">🎯</span>Simulacros</button>
     <button onclick="toggleMore(false);nav('stats')"><span class="ni">📈</span>Estadísticas</button>
     <button onclick="toggleMore(false);nav('tutor')"><span class="ni">🤖</span>Tutor IA</button>
     <a href="https://josej2013gm-glitch.github.io/entreno/" target="_blank" rel="noopener" onclick="toggleMore(false)"><span class="ni">🏋️</span>Entrenamientos<span class="ext">↗</span></a>
@@ -407,6 +414,67 @@
   </div>
 </div>
 
+<!-- MODAL: NUEVO / EDITAR SIMULACRO -->
+<div id="modal-sim" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-sim')">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title" id="sim-mtitle">🎯 Nuevo simulacro</div>
+    <div class="seg sim-tipo" id="sim-tipo">
+      <button data-t="test" onclick="simSetTipo('test')">📝 Tipo test</button>
+      <button data-t="callejero" onclick="simSetTipo('callejero')">🗺️ Callejero</button>
+      <button data-t="escrito" onclick="simSetTipo('escrito')">✍️ Escrito</button>
+    </div>
+    <div class="modal-sub" id="sim-rules" style="margin-top:10px"></div>
+    <div class="modal-field"><label class="modal-label">Fecha</label><input type="date" id="sim-date" class="w-full"></div>
+    <div id="sim-box-q">
+      <div class="sim-3 modal-field">
+        <div><label class="modal-label">✓ Aciertos</label><input type="number" id="sim-a" min="0" max="500" inputmode="numeric" class="w-full" oninput="simPreview()"></div>
+        <div><label class="modal-label">✕ Fallos</label><input type="number" id="sim-f" min="0" max="500" inputmode="numeric" class="w-full" oninput="simPreview()"></div>
+        <div><label class="modal-label">○ En blanco</label><input type="number" id="sim-b" min="0" max="500" inputmode="numeric" class="w-full" oninput="simPreview()"></div>
+      </div>
+      <div id="sim-prev" class="sim-prev"></div>
+    </div>
+    <div id="sim-box-e" hidden>
+      <div class="modal-field"><label class="modal-label">Tema desarrollado (Anexo I, temas 1 a 40)</label><select id="sim-tema" class="w-full"></select></div>
+      <div class="modal-field"><label class="modal-label">Tiempo invertido (máx. 1 h 30 min)</label>
+        <div class="sim-time"><input type="number" id="sim-h" min="0" max="1" inputmode="numeric" placeholder="0"><span>h</span><input type="number" id="sim-m" min="0" max="59" inputmode="numeric" placeholder="0"><span>min</span></div></div>
+      <div class="modal-field">
+        <label class="modal-label">Informe de corrección externo</label>
+        <textarea id="sim-inf" class="w-full" rows="10" style="resize:vertical" placeholder="Pega aquí el informe que te ha dado la IA externa tras analizar las fotos de tu examen…" oninput="simInfCount()"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          <button class="btn btn-ghost btn-sm" type="button" onclick="simPaste()">📋 Pegar</button>
+          <span class="plan-sub" id="sim-inf-n">0 palabras</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-field"><label class="modal-label">Observaciones (opcional)</label><input type="text" id="sim-obs" class="w-full" placeholder="P. ej. «test de 50 preguntas de Politests, bloque II»"></div>
+    <div id="sim-err" class="sim-err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeM('modal-sim')">Cancelar</button>
+      <button class="btn btn-primary" id="sim-save" onclick="saveSim()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FICHA DE SIMULACRO -->
+<div id="modal-simd" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-simd')">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-title" id="simd-title"></div>
+    <div id="simd-body"></div>
+    <div id="simd-es" class="tk-acts" style="margin-top:12px">
+      <button class="btn btn-ghost btn-sm" id="simd-reeval" onclick="simReevalCur()">✨ Reevaluar</button>
+      <button class="btn btn-ghost btn-sm" onclick="simManualCur()">✎ Ajustar nota</button>
+    </div>
+    <div id="simd-man" class="res-add" hidden style="margin-top:8px">
+      <input type="text" id="simd-man-v" inputmode="decimal" placeholder="Nota de 0 a 5" onkeydown="if(event.key==='Enter')simManualSave()">
+      <button class="btn btn-primary btn-sm" onclick="simManualSave()">Guardar nota</button>
+    </div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="btn btn-ghost" id="simd-del" style="color:var(--danger)" onclick="simDelCur()">🗑 Eliminar</button>
+      <div style="display:flex;gap:7px"><button class="btn btn-ghost" onclick="simEditCur()">✏️ Editar</button><button class="btn btn-ghost" onclick="closeM('modal-simd')">Cerrar</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: TERMINAR SESIÓN -->
 <div id="modal-tm" class="modal-overlay" style="display:none" onclick="outsideClose(event,'modal-tm')">
   <div class="modal">
@@ -422,26 +490,27 @@
   </div>
 </div>
 
-<script src="js/data.js?v=5"></script>
-<script src="js/core.js?v=5"></script>
-<script src="js/planner.js?v=5"></script>
-<script src="js/temas.js?v=5"></script>
-<script src="js/dashboard.js?v=5"></script>
-<script src="js/stats.js?v=5"></script>
-<script src="js/timer.js?v=5"></script>
-<script src="js/tutor.js?v=5"></script>
+<script src="js/data.js?v=6"></script>
+<script src="js/core.js?v=6"></script>
+<script src="js/planner.js?v=6"></script>
+<script src="js/temas.js?v=6"></script>
+<script src="js/dashboard.js?v=6"></script>
+<script src="js/stats.js?v=6"></script>
+<script src="js/timer.js?v=6"></script>
+<script src="js/tutor.js?v=6"></script>
+<script src="js/simulacros.js?v=6"></script>
 <script>
-// Menú «Más» de la barra inferior (móvil): se marca activo en Estadísticas y Tutor
+// Menú «Más» de la barra inferior (móvil): se marca activo en Simulacros, Estadísticas y Tutor
 function toggleMore(open){
   const sh=$('more-sheet');if(open===undefined)open=sh.hidden;
   sh.hidden=!open;$('bn-more').setAttribute('aria-expanded',open);
 }
 (function(){
   const base=nav;
-  nav=function(name){base(name);$('bn-more').classList.toggle('active',name==='stats'||name==='tutor');};
+  nav=function(name){base(name);$('bn-more').classList.toggle('active',name==='sims'||name==='stats'||name==='tutor');};
 })();
 </script>
-<script type="module" src="js/sync.js?v=5"></script>
+<script type="module" src="js/sync.js?v=6"></script>
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 </body>
 </html>
