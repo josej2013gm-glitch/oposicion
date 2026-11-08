@@ -15,7 +15,9 @@ const DOW=['domingo','lunes','martes','miércoles','jueves','viernes','sábado']
 const DOW_S=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const ORDER=[1,2,3,4,5,6,0];
 const TYPE_ICON={study:'📖',repaso:'🔄',test:'📝',psico:'🧩',fisico:'🏋️',other:'🎯'};
+// psico y fisico solo se conservan para mostrar tareas antiguas: ya no se pueden crear
 const TYPE_LBL={study:'Estudio',repaso:'Repaso',test:'Test / simulacro',psico:'Psicotécnicos',fisico:'Entrenamiento',other:'Otro'};
+const NEW_TYPES=['study','repaso','test','other'];
 const TYPE_COL={study:'var(--accent)',repaso:'var(--ok)',test:'var(--info)',psico:'#8B5CF6',fisico:'#F97316',other:'var(--warn)'};
 const ST_LBL={done:'Completada',partial:'Parcial',no:'No hecha'};
 const ST_ICON={done:'✓',partial:'½',no:'✕'};
@@ -37,7 +39,7 @@ function stats(evs){
 function refreshViews(){
   const act=PANELS.find(p=>$('p-'+p).classList.contains('active'));
   if(act==='cal')renderCal();else if(act==='plan')renderPlan();else if(act==='dashboard')renderDash();
-  else if(act==='temas')renderTemas();else if(act==='stats')renderStats();else if(act==='psico')renderPsico();else if(act==='entr')renderEntr();
+  else if(act==='temas')renderTemas();else if(act==='stats')renderStats();
 }
 function temaShort(x){const s=x.t.split(/[:.]/)[0];return s.length>90?s.slice(0,88)+'…':s;}
 
@@ -119,8 +121,8 @@ TAREAS DE LAS ÚLTIMAS 3 SEMANAS Y SU RESULTADO:
 ${recTxt}
 
 Cumplimiento últimos 14 días: ${c.pct==null?'sin datos':c.pct+'%'} (${c.done} completadas, ${c.partial} parciales, ${c.no} no hechas, ${c.none} sin marcar).
-${dud?`\nDUDAS PENDIENTES DEL OPOSITOR:\n${dud}\n`:''}${psicoPromptTxt(ws,keep)}
-TAREAS YA FIJADAS EN EL CALENDARIO PARA ESE PERIODO (respétalas y descuenta su tiempo de la disponibilidad de ese día; las de tipo «Entrenamiento» son entrenamiento físico: no ocupes esa franja pero NO descuentes su tiempo de las horas de estudio):
+${dud?`\nDUDAS PENDIENTES DEL OPOSITOR:\n${dud}\n`:''}
+TAREAS YA FIJADAS EN EL CALENDARIO PARA ESE PERIODO (respétalas y descuenta su tiempo de la disponibilidad de ese día; si alguna es de tipo «Entrenamiento», no ocupes esa franja pero NO descuentes su tiempo de las horas de estudio):
 ${keepTxt}
 ${extra?`\nINDICACIONES DEL OPOSITOR (tienen prioridad):\n${extra}\n`:''}
 REGLAS:
@@ -130,7 +132,7 @@ REGLAS:
 4. "completa_vuelta": true solo en la tarea (de tipo study o repaso) cuyo final completa una vuelta o repaso del tema; si un tema se divide en varias tareas, solo la última lleva true. Al marcarla como completada el tema avanzará de estado.
 5. Alterna grupos para no saturar. Si hay temas iniciados, incluye alguna tarea de tipo "test" que sea práctica de DESARROLLO ORAL/ESCRITO (esquema de memoria, exposición de un tema en 5 minutos, preguntas cortas abiertas); no son tests de opciones.
 6. Si el cumplimiento reciente es bajo (<60 %), planifica algo menos que la disponibilidad máxima.
-7. tipo: "study" (estudio de un tema, 1ª o 2ª vuelta), "repaso", "test" (práctica de desarrollo/simulacro), "psico" (sesión de psicotécnicos, sin tema; ver sección PSICOTÉCNICOS), "other".
+7. tipo: "study" (estudio de un tema, 1ª o 2ª vuelta), "repaso", "test" (práctica de desarrollo/simulacro), "other". No incluyas psicotécnicos ni entrenamiento físico: esta app solo planifica el estudio del temario.
 8. Títulos cortos en español, p. ej. "Tema 5 · Acto administrativo (1ª vuelta)". En "descripcion" indica qué hacer en concreto (1-2 frases).
 
 Responde SOLO con un objeto JSON, sin texto adicional, con esta forma:
@@ -158,8 +160,8 @@ function normTasks(data,ws){
     if(!x||typeof x!=='object')return;
     const fecha=String(x.fecha||x.date||'').slice(0,10);if(!valid[fecha])return;
     let tipo=String(x.tipo||x.type||'study').toLowerCase();
-    if(!TYPE_LBL[tipo])tipo=/psic/.test(tipo)?'psico':/repas/.test(tipo)?'repaso':/test|simul/.test(tipo)?'test':/estud|study/.test(tipo)?'study':'other';
-    let tema=parseInt(x.tema,10);if(!(tema>=1&&tema<=41)||tipo==='psico')tema=null;
+    if(!NEW_TYPES.includes(tipo))tipo=/repas/.test(tipo)?'repaso':/test|simul/.test(tipo)?'test':/estud|study/.test(tipo)?'study':'other';
+    let tema=parseInt(x.tema,10);if(!(tema>=1&&tema<=41))tema=null;
     let h=parseFloat(String(x.horas??x.hours??1).replace(',','.'));if(!isFinite(h))h=1;h=Math.max(0.25,Math.min(6,Math.round(h*4)/4));
     const title=String(x.titulo||x.title||(tema?'Tema '+tema:TYPE_LBL[tipo])).slice(0,140);
     const cv=x.completa_vuelta;
@@ -329,7 +331,7 @@ function renderWeekList(ws,we){
   el.innerHTML=wEvs.map(e=>{const h=e.date!==last?`<div class="day-hdr">${esc(cap(pd(e.date).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})))}</div>`:'';last=e.date;return h+taskRow(e);}).join('');
 }
 function stBtns(e){
-  return (e.status==='done'?'':e.type==='fisico'&&e.entr?`<button class="st-btn s-play" title="Registrar el entrenamiento" aria-label="Registrar el entrenamiento" onclick="entrLogOpen('${e.id}')">📝</button>`:e.type==='psico'?`<button class="st-btn s-play" title="Hacer un cuestionario" aria-label="Hacer un cuestionario" onclick="psicoFromTask('${e.id}')">🧩</button>`:`<button class="st-btn s-play" title="Iniciar temporizador" aria-label="Iniciar temporizador" onclick="tmStart('${e.id}')">▶</button>`)
+  return (e.status==='done'||e.type==='fisico'?'':`<button class="st-btn s-play" title="Iniciar temporizador" aria-label="Iniciar temporizador" onclick="tmStart('${e.id}')">▶</button>`)
     +['done','partial','no'].map(k=>`<button class="st-btn s-${k}${e.status===k?' on':''}" title="${ST_LBL[k]}" aria-label="${ST_LBL[k]}" onclick="setStatus('${e.id}','${k}')">${ST_ICON[k]}</button>`).join('');
 }
 function taskRow(e){
@@ -384,15 +386,11 @@ function openTask(id){
   dd.textContent=e.desc||(tema?tema.t:'');dd.style.display=dd.textContent?'block':'none';
   $('tk-status').innerHTML=['done','partial','no'].map(k=>`<button class="btn btn-ghost${e.status===k?' on-'+k:''}" onclick="setStatus('${e.id}','${k}')">${ST_ICON[k]} ${ST_LBL[k]}</button>`).join('');
   $('tk-gcal').href=gcalUrl(e);
-  $('tk-psico').style.display=e.type==='psico'?'':'none';
-  $('tk-entr').style.display=e.type==='fisico'&&e.entr?'':'none';
   $('tk-timer').style.display=e.type==='fisico'?'none':'';
   let note='';
   if(e.advTo!=null)note=`✓ El Tema ${e.tema} pasó a «${ESTADOS[e.advTo]}» al completar esta tarea.`;
   else if(e.adv&&e.tema)note=`Al marcarla como completada, el Tema ${e.tema} avanzará de estado en «Temas» (ahora: ${ESTADOS[td(e.tema).e]}).`;
   else if(e.tema&&(e.type==='study'||e.type==='repaso'))note='Esta es una parte del tema: completarla no cambia su estado.';
-  if(e.type==='psico')note=(e.pq&&e.pq.length?'Cuestionarios hechos en esta tarea: '+e.pq.join(' · ')+'. ':'')+'Pulsa «Hacer cuestionario»: se abre el sugerido y el tiempo se suma a la tarea.';
-  if(e.type==='fisico')note=e.entr?'Pulsa «Registrar entrenamiento» al terminar: tus marcas, el esfuerzo y las molestias ajustan la semana siguiente.':'';
   $('tk-note').textContent=note;
   $('modal-task').style.display='flex';
 }
@@ -450,7 +448,7 @@ function saveEv(){
   if(!title&&tema)title='Tema '+tema+' · '+temaShort(TEMAS.find(t=>t.n===tema));
   if(!title){$('ev-title').focus();return;}
   const date=$('ev-date').value;if(!date){$('ev-date').focus();return;}
-  const type=$('ev-type').value;
+  const type=$('ev-type').value||'other'; // las tareas antiguas de psicotécnicos/entrenamiento pasan a «Otro» al editarlas
   const s=$('ev-s').value||'09:00';let e=$('ev-e').value;
   if(!e||e<=s)e=addMin(s,60);
   const rv=$('ev-real').value.trim(),real=rv===''?null:Math.max(0,Math.min(900,parseInt(rv,10)||0));
