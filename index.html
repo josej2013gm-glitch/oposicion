@@ -15,7 +15,7 @@
 <title>Oposición PL Cieza</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
@@ -198,6 +198,23 @@
     </div>
 
   </div><!-- /content -->
+</div>
+
+<!-- BARRA INFERIOR (solo móvil) -->
+<nav id="botnav" aria-label="Navegación principal">
+  <button class="nav-btn" data-panel="dashboard" onclick="nav('dashboard')"><span class="ni">📊</span><span>Inicio</span></button>
+  <button class="nav-btn" data-panel="temas" onclick="nav('temas')"><span class="ni">📚</span><span>Temas</span></button>
+  <button class="nav-btn" data-panel="cal" onclick="nav('cal')"><span class="ni">📅</span><span>Calendario</span></button>
+  <button class="nav-btn" data-panel="plan" onclick="nav('plan')"><span class="ni">✨</span><span>Planificar</span></button>
+  <button class="bn-more" id="bn-more" onclick="toggleMore()" aria-haspopup="true" aria-expanded="false"><span class="ni">☰</span><span>Más</span></button>
+</nav>
+<div id="more-sheet" class="more-sheet" hidden onclick="if(event.target===this)toggleMore(false)">
+  <div class="more-card">
+    <button onclick="toggleMore(false);nav('stats')"><span class="ni">📈</span>Estadísticas</button>
+    <button onclick="toggleMore(false);nav('tutor')"><span class="ni">🤖</span>Tutor IA</button>
+    <a href="https://josej2013gm-glitch.github.io/entreno/" target="_blank" rel="noopener" onclick="toggleMore(false)"><span class="ni">🏋️</span>Entrenamientos<span class="ext">↗</span></a>
+    <a href="https://app.politests.es/" target="_blank" rel="noopener" onclick="toggleMore(false)"><span class="ni">📝</span>Test<span class="ext">↗</span></a>
+  </div>
 </div>
 
 <!-- TEMPORIZADOR FLOTANTE -->
@@ -413,6 +430,17 @@
 <script src="js/stats.js?v=5"></script>
 <script src="js/timer.js?v=5"></script>
 <script src="js/tutor.js?v=5"></script>
+<script>
+// Menú «Más» de la barra inferior (móvil): se marca activo en Estadísticas y Tutor
+function toggleMore(open){
+  const sh=$('more-sheet');if(open===undefined)open=sh.hidden;
+  sh.hidden=!open;$('bn-more').setAttribute('aria-expanded',open);
+}
+(function(){
+  const base=nav;
+  nav=function(name){base(name);$('bn-more').classList.toggle('active',name==='stats'||name==='tutor');};
+})();
+</script>
 <script type="module" src="js/sync.js?v=5"></script>
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 </body>

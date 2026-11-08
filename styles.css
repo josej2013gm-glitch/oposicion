@@ -498,3 +498,86 @@ a.btn{text-decoration:none}
 .ev-fisico { background: rgba(249,115,22,.14); color: #C2410C }
 :root[data-theme="dark"] .ev-fisico { color: #FDBA74 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ev-fisico { color: #FDBA74 } }
+
+/* ============================================================
+   MÓVIL (v6): barra inferior tipo app, zona del notch, formularios y calendario
+   ============================================================ */
+html { background: var(--nav-bg) }
+body { background: var(--bg) }
+#botnav, .more-sheet { display: none }
+@media (max-width: 768px) {
+  :root { padding-top: 0; padding-bottom: 0 }
+  html, body { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent }
+  /* Cabecera: una sola fila, ocupa también la zona de la hora/notch */
+  #topnav { flex-wrap: nowrap; gap: 8px; padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 8px }
+  .tn-brand { padding-bottom: 0; min-width: 0 }
+  .tn-title { font-size: 15px }
+  .tn-menu { display: none }
+  .tn-actions { padding-bottom: 0 }
+  .tn-icon { padding: 8px; font-size: 18px }
+  #content { overscroll-behavior: contain; padding-bottom: 90px }
+  #content:has(#p-tutor.active) { padding-bottom: 12px }
+
+  /* Barra inferior */
+  #botnav { display: flex; flex-shrink: 0; background: var(--nav-bg); border-top: 1px solid rgba(255,255,255,.08);
+    padding: 4px max(4px, env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left,0px)) }
+  #botnav .nav-btn, .bn-more { flex: 1; flex-direction: column; gap: 2px; padding: 6px 0 4px; font-size: 10.5px; font-weight: 500; min-width: 0;
+    border: none; background: none; color: var(--nav-text); font-family: var(--font); border-radius: 10px; cursor: pointer; display: flex; align-items: center }
+  #botnav .ni { font-size: 20px; line-height: 1 }
+  #botnav .nav-btn.active, .bn-more.active, .bn-more[aria-expanded="true"] { color: #fff; background: var(--nav-active-bg) }
+  .more-sheet:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.35) }
+  .more-card { position: absolute; right: 10px; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); min-width: 220px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px; padding: 6px; box-shadow: 0 16px 40px rgba(0,0,0,.3) }
+  .more-card button, .more-card a { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; border: none; background: none;
+    color: var(--fg); font: 500 15px var(--font); text-decoration: none; border-radius: 10px; cursor: pointer; text-align: left }
+  .more-card button:active, .more-card a:active { background: var(--surface-2) }
+  .more-card .ni { font-size: 19px; width: 24px; text-align: center }
+  .more-card .ext { margin-left: auto; color: var(--fg-3) }
+
+  /* Elementos flotantes por encima de la barra inferior */
+  .tm-bar { bottom: calc(72px + env(safe-area-inset-bottom, 0px)) }
+  .toast, .sync-toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) }
+
+  /* Formularios: 16px evita el zoom automático del iPhone al tocar un campo */
+  input, select, textarea, .chat-input { font-size: 16px !important }
+  .btn { min-height: 36px }
+  .btn-sm { min-height: 34px; padding: 6px 11px }
+  .st-btn { width: 34px; height: 34px; font-size: 14px }
+
+  /* Ventanas como hoja inferior */
+  .modal-overlay { align-items: flex-end; padding: 0 }
+  .modal { max-width: none; border-radius: 18px 18px 0 0; border-bottom: none; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px));
+    padding: 20px max(16px, env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left,0px)) }
+  .modal::before { content: ""; display: block; width: 38px; height: 4px; border-radius: 2px; background: var(--border-strong); margin: -8px auto 14px }
+  .modal-actions { position: sticky; bottom: calc(-18px - env(safe-area-inset-bottom, 0px)); background: var(--surface); margin: 18px -16px 0; padding: 10px 16px 0 }
+  .modal-actions .btn { flex: 1; justify-content: center; min-height: 44px; font-size: 15px }
+  .modal-row:has(#ev-type) { grid-template-columns: 1fr }
+
+  /* Filas de herramientas: una sola fila deslizable en vez de amontonarse */
+  .cal-tools, .quick-prompts, .tutor-tools { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-left: -16px; margin-right: -16px; padding: 0 16px 2px }
+  .cal-tools::-webkit-scrollbar, .quick-prompts::-webkit-scrollbar, .tutor-tools::-webkit-scrollbar { display: none }
+  .cal-tools > *, .quick-prompts > *, .tutor-tools > * { flex-shrink: 0; white-space: nowrap }
+  .qp { padding: 8px 12px; font-size: 13px }
+
+  /* Calendario */
+  .planner-top { gap: 6px; margin-bottom: 12px }
+  .planner-top > .btn-primary { display: none } /* ya está el «+» de la cabecera */
+  .week-nav { flex: 1 1 100%; order: 3; justify-content: space-between }
+  .week-label { min-width: 0; flex: 1 }
+  .planner-top .seg { flex: 1 }
+  .seg button { flex: 1; padding: 8px 12px; font-size: 14px }
+
+  /* Tutor: el chat ocupa el alto disponible */
+  #tutor-inner { height: calc(100dvh - 250px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); min-height: 300px }
+  .chat-msg { max-width: 94% }
+}
+@media (max-width: 520px) {
+  /* En la cuadrícula, cada tarea es una barra de color; el detalle está en la lista de abajo */
+  .cal-day { min-height: 48px; padding: 5px 3px }
+  .cal-ev { font-size: 0; height: 5px; padding: 0; border-radius: 3px; margin-bottom: 3px; pointer-events: none }
+  .cal-ev.ev-study { background: var(--accent) } .cal-ev.ev-repaso { background: var(--ok) } .cal-ev.ev-test { background: var(--info) }
+  .cal-ev.ev-other { background: var(--warn) } .cal-ev.ev-psico { background: #8B5CF6 } .cal-ev.ev-fisico { background: #F97316 }
+  .cal-ev.st-done { opacity: .35; text-decoration: none } .cal-ev.st-no { background: var(--danger); opacity: .5 }
+  .cal-grid.month .cal-day { min-height: 54px }
+  .cal-more { font-size: 9px; padding-left: 0 }
+}
